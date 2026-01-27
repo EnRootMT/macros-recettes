@@ -46,6 +46,8 @@
     { "id": "brocoli", "name": "Brocoli", "kcal100": 34, "prot100": 2.8, "fat100": 0.4, "sugar100": 1.7 },
     { "id": "poivron", "name": "Poivron", "kcal100": 31, "prot100": 1, "fat100": 0.3, "sugar100": 4.2 },
     { "id": "pomme_de_terre", "name": "Pomme de terre", "kcal100": 77, "prot100": 2, "fat100": 0.1, "sugar100": 0.8 },
+    { "id": "poireau","name":"Poireau","kcal100":61,"prot100":1.5,"fat100":0.3,"sugar100":3.9},
+
 
     { "id": "lentilles_seches", "name": "Lentilles sèches", "kcal100": 352, "prot100": 25, "fat100": 1.1, "sugar100": 2 },
     { "id": "pois_chiches_secs", "name": "Pois chiches secs", "kcal100": 364, "prot100": 19, "fat100": 6, "sugar100": 11 },
