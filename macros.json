@@ -1,0 +1,59 @@
+{
+  "products": [
+    { "id": "eau", "name": "Eau", "kcal100": 0, "prot100": 0, "fat100": 0, "sugar100": 0 },
+
+    { "id": "sel", "name": "Sel", "kcal100": 0, "prot100": 0, "fat100": 0, "sugar100": 0 },
+    { "id": "sucre_blanc", "name": "Sucre blanc", "kcal100": 400, "prot100": 0, "fat100": 0, "sugar100": 100 },
+    { "id": "sucre_roux", "name": "Sucre roux", "kcal100": 380, "prot100": 0, "fat100": 0, "sugar100": 98 },
+    { "id": "miel", "name": "Miel", "kcal100": 304, "prot100": 0.3, "fat100": 0, "sugar100": 82 },
+
+    { "id": "huile_olive", "name": "Huile d'olive", "kcal100": 884, "prot100": 0, "fat100": 100, "sugar100": 0 },
+    { "id": "huile_tournesol", "name": "Huile de tournesol", "kcal100": 884, "prot100": 0, "fat100": 100, "sugar100": 0 },
+    { "id": "huile_colza", "name": "Huile de colza", "kcal100": 884, "prot100": 0, "fat100": 100, "sugar100": 0 },
+    { "id": "beurre", "name": "Beurre", "kcal100": 717, "prot100": 0.9, "fat100": 81, "sugar100": 0.1 },
+
+    { "id": "farine_blanche", "name": "Farine de blé blanche", "kcal100": 364, "prot100": 10, "fat100": 1, "sugar100": 1 },
+    { "id": "farine_complete", "name": "Farine complète", "kcal100": 340, "prot100": 13, "fat100": 2.5, "sugar100": 1 },
+    { "id": "riz_blanc", "name": "Riz blanc (sec)", "kcal100": 365, "prot100": 7.5, "fat100": 0.7, "sugar100": 0.1 },
+    { "id": "riz_complet", "name": "Riz complet (sec)", "kcal100": 360, "prot100": 7.5, "fat100": 2.7, "sugar100": 0.7 },
+    { "id": "pates_seches", "name": "Pâtes sèches", "kcal100": 371, "prot100": 13, "fat100": 1.5, "sugar100": 2.7 },
+    { "id": "semoule_ble", "name": "Semoule de blé", "kcal100": 376, "prot100": 12.7, "fat100": 1.1, "sugar100": 0.3 },
+    { "id": "avoine", "name": "Flocons d'avoine", "kcal100": 389, "prot100": 17, "fat100": 7, "sugar100": 1 },
+
+    { "id": "poulet", "name": "Poulet cru", "kcal100": 120, "prot100": 22, "fat100": 2, "sugar100": 0 },
+    { "id": "boeuf", "name": "Bœuf cru", "kcal100": 250, "prot100": 26, "fat100": 17, "sugar100": 0 },
+    { "id": "porc", "name": "Porc cru", "kcal100": 242, "prot100": 27, "fat100": 14, "sugar100": 0 },
+    { "id": "agneau", "name": "Agneau cru", "kcal100": 294, "prot100": 25, "fat100": 21, "sugar100": 0 },
+
+    { "id": "saumon", "name": "Saumon cru", "kcal100": 208, "prot100": 20, "fat100": 13, "sugar100": 0 },
+    { "id": "thon", "name": "Thon cru", "kcal100": 144, "prot100": 23, "fat100": 5, "sugar100": 0 },
+    { "id": "cabillaud", "name": "Cabillaud cru", "kcal100": 82, "prot100": 18, "fat100": 0.7, "sugar100": 0 },
+
+    { "id": "oeuf", "name": "Œuf entier cru", "kcal100": 143, "prot100": 13, "fat100": 10, "sugar100": 1.1 },
+    { "id": "lait_entier", "name": "Lait entier", "kcal100": 60, "prot100": 3.2, "fat100": 3.3, "sugar100": 5 },
+    { "id": "lait_demi", "name": "Lait demi-écrémé", "kcal100": 46, "prot100": 3.4, "fat100": 1.6, "sugar100": 5 },
+
+    { "id": "pomme", "name": "Pomme", "kcal100": 52, "prot100": 0.3, "fat100": 0.2, "sugar100": 10 },
+    { "id": "banane", "name": "Banane", "kcal100": 89, "prot100": 1.1, "fat100": 0.3, "sugar100": 12 },
+    { "id": "orange", "name": "Orange", "kcal100": 47, "prot100": 0.9, "fat100": 0.1, "sugar100": 9 },
+    { "id": "fraise", "name": "Fraise", "kcal100": 32, "prot100": 0.7, "fat100": 0.3, "sugar100": 4.9 },
+
+    { "id": "tomate", "name": "Tomate", "kcal100": 18, "prot100": 0.9, "fat100": 0.2, "sugar100": 2.6 },
+    { "id": "oignon", "name": "Oignon", "kcal100": 40, "prot100": 1.1, "fat100": 0.1, "sugar100": 4.2 },
+    { "id": "ail", "name": "Ail", "kcal100": 149, "prot100": 6.4, "fat100": 0.5, "sugar100": 1 },
+    { "id": "carotte", "name": "Carotte", "kcal100": 41, "prot100": 0.9, "fat100": 0.2, "sugar100": 4.7 },
+    { "id": "courgette", "name": "Courgette", "kcal100": 17, "prot100": 1.2, "fat100": 0.3, "sugar100": 2.5 },
+    { "id": "brocoli", "name": "Brocoli", "kcal100": 34, "prot100": 2.8, "fat100": 0.4, "sugar100": 1.7 },
+    { "id": "poivron", "name": "Poivron", "kcal100": 31, "prot100": 1, "fat100": 0.3, "sugar100": 4.2 },
+    { "id": "pomme_de_terre", "name": "Pomme de terre", "kcal100": 77, "prot100": 2, "fat100": 0.1, "sugar100": 0.8 },
+
+    { "id": "lentilles_seches", "name": "Lentilles sèches", "kcal100": 352, "prot100": 25, "fat100": 1.1, "sugar100": 2 },
+    { "id": "pois_chiches_secs", "name": "Pois chiches secs", "kcal100": 364, "prot100": 19, "fat100": 6, "sugar100": 11 },
+    { "id": "haricots_secs", "name": "Haricots secs", "kcal100": 333, "prot100": 21, "fat100": 1.6, "sugar100": 2 },
+
+    { "id": "amandes", "name": "Amandes", "kcal100": 579, "prot100": 21, "fat100": 50, "sugar100": 4.4 },
+    { "id": "noix", "name": "Noix", "kcal100": 654, "prot100": 15, "fat100": 65, "sugar100": 2.6 },
+    { "id": "noisettes", "name": "Noisettes", "kcal100": 628, "prot100": 15, "fat100": 61, "sugar100": 4.3 },
+    { "id": "cacahuetes", "name": "Cacahuètes", "kcal100": 567, "prot100": 26, "fat100": 49, "sugar100": 4.7 }
+  ]
+}
