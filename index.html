@@ -1,0 +1,546 @@
+ <!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Macro Recette (local + JSON)</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background:#f8f9fa; }
+    .mono { font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; }
+    .card { border-radius: 1rem; }
+  </style>
+</head>
+
+<body>
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Macro Recette (100% local)</h1>
+    <div class="d-flex gap-2">
+      <button id="resetBtn" class="btn btn-outline-secondary btn-sm">Reset recette</button>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Col gauche -->
+    <div class="col-12 col-lg-7">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h5">Catalogue produits (JSON)</h2>
+
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-6">
+              <label class="form-label">Importer macros.json</label>
+              <input id="jsonFileInput" class="form-control" type="file" accept="application/json">
+              <div class="form-text">
+                En mode fichier local, le navigateur ne peut pas lire automatiquement macros.json sans import manuel.
+              </div>
+            </div>
+            <div class="col-12 col-md-3">
+              <button id="exportCatalogBtn" class="btn btn-outline-primary w-100">Exporter JSON</button>
+            </div>
+            <div class="col-12 col-md-3">
+              <button id="loadSampleBtn" class="btn btn-outline-secondary w-100">Charger exemple</button>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <h2 class="h5">Ajouter un ingrédient</h2>
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-8">
+              <label class="form-label">Produit existant</label>
+              <select id="productSelect" class="form-select"></select>
+            </div>
+            <div class="col-6 col-md-2">
+              <label class="form-label">Max (g)</label>
+              <input id="gramsMaxInput" type="number" min="1" step="1" class="form-control" value="1000">
+            </div>
+            <div class="col-6 col-md-2">
+              <button id="addIngredientBtn" class="btn btn-primary w-100">Ajouter</button>
+            </div>
+          </div>
+
+          <details class="mt-3">
+            <summary class="text-muted">Créer un nouveau produit</summary>
+
+            <div class="row g-2 mt-2">
+              <div class="col-12 col-md-4">
+                <label class="form-label">Nom</label>
+                <input id="newName" class="form-control" placeholder="Ex: Yaourt grec">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label">kcal/100g</label>
+                <input id="newKcal" class="form-control" type="number" step="0.1" value="0">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label">Prot</label>
+                <input id="newProt" class="form-control" type="number" step="0.1" value="0">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label">Fat</label>
+                <input id="newFat" class="form-control" type="number" step="0.1" value="0">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label">Sucres</label>
+                <input id="newSugar" class="form-control" type="number" step="0.1" value="0">
+              </div>
+              <div class="col-12">
+                <button id="createProductBtn" class="btn btn-success">Créer + ajouter au catalogue</button>
+                <small class="text-muted ms-2">Pense à Exporter JSON pour sauvegarder.</small>
+              </div>
+            </div>
+          </details>
+
+          <hr class="my-4">
+
+          <h2 class="h5">Recette</h2>
+          <p class="text-muted mb-3">Curseur par ingrédient = grammes utilisés.</p>
+
+          <div id="ingredients"></div>
+
+          <hr class="my-4">
+
+          <h2 class="h6 mb-2">Poids final manuel (eau / évaporation)</h2>
+          <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-4">
+              <div class="d-flex align-items-center justify-content-between">
+                <label class="form-label mb-0">Poids final (g)</label>
+              </div>
+              <div class="mono fw-semibold" id="manualFinalWeightLabel">0 g</div>
+            </div>
+
+            <div class="col-12 col-md-8">
+              <input id="manualFinalWeightSlider" type="range" min="0" max="5000" step="1" value="0">
+              <div class="form-text d-flex align-items-center gap-2">
+                <input class="form-check-input" type="checkbox" id="manualAutoSync" checked>
+                <label class="form-check-label" for="manualAutoSync">
+                  Auto (par défaut = poids ingrédients)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <small class="text-muted">
+              Le <strong>poids final manuel</strong> ne change pas les calories totales : il sert uniquement au calcul
+              <strong>kcal/100g (manuel)</strong>.
+            </small>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Col droite -->
+    <div class="col-12 col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h5">Résultats</h2>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-3 bg-white border rounded-3">
+                <div class="text-muted">Calories total</div>
+                <div class="h4 mono mb-0" id="kcalTotal">0</div>
+                <small class="text-muted">kcal</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-white border rounded-3">
+                <div class="text-muted">Calories / 100g (ingrédients)</div>
+                <div class="h4 mono mb-0" id="kcalPer100Ingredients">0</div>
+                <small class="text-muted">kcal/100g</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="p-3 bg-white border rounded-3">
+              <div class="text-muted">Calories / 100g (poids final manuel)</div>
+              <div class="h4 mono mb-0" id="kcalPer100Manual">0</div>
+              <small class="text-muted">kcal/100g</small>
+            </div>
+          </div>
+
+          <div class="p-3 bg-white border rounded-3">
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Poids (somme ingrédients)</span>
+              <span class="mono fw-semibold" id="ingredientsWeight">0 g</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Poids final manuel</span>
+              <span class="mono fw-semibold" id="manualWeightOut">0 g</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Protéines</span>
+              <span class="mono fw-semibold" id="protTotal">0 g</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Lipides</span>
+              <span class="mono fw-semibold" id="fatTotal">0 g</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Sucres</span>
+              <span class="mono fw-semibold" id="sugarTotal">0 g</span>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <details>
+            <summary class="text-muted">Debug (catalogue JSON)</summary>
+            <textarea id="catalogEditor" class="form-control mt-2" rows="10"></textarea>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const el = (id) => document.getElementById(id);
+
+  // --- Catalogue (produits) ---
+  let catalog = {
+    products: [
+      { id: "poulet", name: "Poulet", kcal100: 165, prot100: 31, fat100: 3.6, sugar100: 0 },
+      { id: "riz_cuit", name: "Riz cuit", kcal100: 130, prot100: 2.7, fat100: 0.3, sugar100: 0.1 },
+      { id: "huile", name: "Huile", kcal100: 884, prot100: 0, fat100: 100, sugar100: 0 }
+    ]
+  };
+
+  // --- Recette (ingrédients choisis) ---
+  let recipe = {
+    ingredients: [
+      { productId: "poulet", grams: 200, gramsMax: 600 },
+      { productId: "riz_cuit", grams: 250, gramsMax: 800 },
+      { productId: "huile", grams: 15, gramsMax: 80 }
+    ]
+  };
+
+  // --- Poids final manuel (indépendant) ---
+  let manualFinalWeight = 0;         // g
+  let manualAutoSync = true;         // par défaut = poids ingrédients
+
+  function round1(x){ return Math.round(x*10)/10; }
+  function round0(x){ return Math.round(x); }
+
+  function getProduct(productId) {
+    return catalog.products.find(p => p.id === productId);
+  }
+
+  function ingredientTotals() {
+    let weight=0, kcal=0, prot=0, fat=0, sugar=0;
+
+    for (const ing of recipe.ingredients) {
+      const p = getProduct(ing.productId);
+      if (!p) continue;
+
+      const g = Number(ing.grams) || 0;
+      weight += g;
+
+      const f = g/100;
+      kcal  += (Number(p.kcal100)||0) * f;
+      prot  += (Number(p.prot100)||0) * f;
+      fat   += (Number(p.fat100)||0) * f;
+      sugar += (Number(p.sugar100)||0) * f;
+    }
+
+    const kcalPer100Ingredients = weight>0 ? (kcal/weight)*100 : 0;
+
+    // IMPORTANT: kcal/100g manuel se base sur le poids final entré
+    const mw = Number(manualFinalWeight) || 0;
+    const kcalPer100Manual = mw>0 ? (kcal/mw)*100 : 0;
+
+    return { weight, kcal, kcalPer100Ingredients, kcalPer100Manual, prot, fat, sugar };
+  }
+
+  function syncCatalogEditor(){
+    el("catalogEditor").value = JSON.stringify(catalog, null, 2);
+  }
+
+  function renderProductSelect(){
+    const sel = el("productSelect");
+    const current = sel.value;
+
+    sel.innerHTML = "";
+    const sorted = [...catalog.products].sort((a,b)=>a.name.localeCompare(b.name, "fr"));
+
+    for (const p of sorted) {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    }
+    if ([...sel.options].some(o=>o.value===current)) sel.value = current;
+  }
+
+  function renderIngredients(){
+    const wrap = el("ingredients");
+    wrap.innerHTML = "";
+
+    recipe.ingredients.forEach((ing, idx) => {
+      const p = getProduct(ing.productId);
+      const name = p ? p.name : "(Produit manquant)";
+      const info = p
+        ? `${p.kcal100} kcal/100g · P ${p.prot100}g · L ${p.fat100}g · Sucres ${p.sugar100}g`
+        : "";
+
+      const card = document.createElement("div");
+      card.className = "mb-3 p-3 bg-white border rounded-3";
+      card.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div>
+            <div class="fw-semibold">${name}</div>
+            <div class="text-muted small">${info}</div>
+          </div>
+          <div class="text-end">
+            <div class="mono fw-semibold" id="gramsLabel-${idx}">${round0(ing.grams)} g</div>
+            <button class="btn btn-sm btn-outline-danger mt-1" data-del="${idx}">Suppr</button>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          <input type="range" min="0" max="${Number(ing.gramsMax)||1000}" step="1"
+                 value="${round0(ing.grams)}" data-idx="${idx}">
+        </div>
+      `;
+      wrap.appendChild(card);
+    });
+
+    wrap.querySelectorAll('input[type="range"][data-idx]').forEach(sl => {
+      sl.addEventListener("input", (e) => {
+        const idx = Number(e.target.dataset.idx);
+        recipe.ingredients[idx].grams = Number(e.target.value);
+        el(`gramsLabel-${idx}`).textContent = `${round0(recipe.ingredients[idx].grams)} g`;
+        onIngredientsChanged();
+      });
+    });
+
+    wrap.querySelectorAll("button[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.dataset.del);
+        recipe.ingredients.splice(idx, 1);
+        onIngredientsChanged(true);
+      });
+    });
+  }
+
+  function onIngredientsChanged(fullRender=false){
+    // si auto-sync activé, le poids manuel suit le poids ingrédients
+    const t = ingredientTotals();
+    if (manualAutoSync) {
+      manualFinalWeight = round0(t.weight);
+      el("manualFinalWeightSlider").value = manualFinalWeight;
+    }
+    if (fullRender) renderAll(); else renderResultsAndWeights();
+  }
+
+  function renderManualWeightUI(){
+    el("manualAutoSync").checked = manualAutoSync;
+    el("manualFinalWeightSlider").value = round0(manualFinalWeight);
+    el("manualFinalWeightLabel").textContent = `${round0(manualFinalWeight)} g`;
+  }
+
+  function renderResultsAndWeights(){
+    const t = ingredientTotals();
+
+    el("kcalTotal").textContent = round0(t.kcal);
+    el("kcalPer100Ingredients").textContent = round0(t.kcalPer100Ingredients);
+    el("kcalPer100Manual").textContent = round0(t.kcalPer100Manual);
+
+    el("ingredientsWeight").textContent = `${round0(t.weight)} g`;
+    el("manualWeightOut").textContent = `${round0(manualFinalWeight)} g`;
+
+    el("protTotal").textContent = `${round1(t.prot)} g`;
+    el("fatTotal").textContent = `${round1(t.fat)} g`;
+    el("sugarTotal").textContent = `${round1(t.sugar)} g`;
+
+    el("manualFinalWeightLabel").textContent = `${round0(manualFinalWeight)} g`;
+  }
+
+  function slugifyId(name){
+    return name
+      .trim()
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function ensureUniqueId(base){
+    let id = base || "produit";
+    let i = 2;
+    while (catalog.products.some(p => p.id === id)) {
+      id = `${base}_${i++}`;
+    }
+    return id;
+  }
+
+  function downloadJson(filename, obj){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // --- Events ---
+  el("addIngredientBtn").addEventListener("click", () => {
+    const productId = el("productSelect").value;
+    if (!productId) return;
+
+    const gramsMax = Math.max(1, Number(el("gramsMaxInput").value) || 1000);
+    recipe.ingredients.push({ productId, grams: 0, gramsMax });
+    renderAll();
+  });
+
+  el("createProductBtn").addEventListener("click", () => {
+    const name = el("newName").value.trim();
+    if (!name) { alert("Nom requis"); return; }
+
+    const base = slugifyId(name);
+    const id = ensureUniqueId(base);
+
+    const p = {
+      id,
+      name,
+      kcal100: Number(el("newKcal").value) || 0,
+      prot100: Number(el("newProt").value) || 0,
+      fat100: Number(el("newFat").value) || 0,
+      sugar100: Number(el("newSugar").value) || 0
+    };
+
+    catalog.products.push(p);
+    renderProductSelect();
+    el("productSelect").value = id;
+    syncCatalogEditor();
+
+    el("newName").value = "";
+    el("newKcal").value = 0;
+    el("newProt").value = 0;
+    el("newFat").value = 0;
+    el("newSugar").value = 0;
+
+    alert("Produit ajouté au catalogue (en mémoire). Pense à Exporter JSON si tu veux le sauvegarder.");
+  });
+
+  el("exportCatalogBtn").addEventListener("click", () => {
+    downloadJson("macros.json", catalog);
+  });
+
+el("jsonFileInput").addEventListener("change", async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+
+    // Accepte 2 formats:
+    // 1) { products: [...] }
+    // 2) [ ... ]   (liste directe)
+    let products = null;
+    if (Array.isArray(parsed)) products = parsed;
+    else if (parsed && Array.isArray(parsed.products)) products = parsed.products;
+
+    if (!products) throw new Error("Format attendu: { products: [...] } ou bien un tableau [...]");
+
+    // Validation minimale
+    for (const p of products) {
+      for (const k of ["id","name","kcal100","prot100","fat100","sugar100"]) {
+        if (!(k in p)) throw new Error(`Champ manquant dans un produit: ${k}`);
+      }
+    }
+
+    // Applique le catalogue
+    catalog = { products };
+
+    // IMPORTANT: met à jour l'UI dans le bon ordre
+    syncCatalogEditor();
+    renderProductSelect();
+
+    // Sélectionne le 1er produit pour vérifier visuellement
+    const sel = el("productSelect");
+    if (sel.options.length > 0) sel.selectedIndex = 0;
+
+    alert(`Catalogue importé: ${products.length} produits`);
+  } catch (err) {
+    alert("Import JSON invalide: " + err.message);
+  } finally {
+    // Permet de ré-importer le même fichier (sinon change ne se déclenche pas toujours)
+    e.target.value = "";
+  }
+});
+
+
+  el("loadSampleBtn").addEventListener("click", () => {
+    catalog = {
+      products: [
+        { id:"poulet", name:"Poulet", kcal100:165, prot100:31, fat100:3.6, sugar100:0 },
+        { id:"riz_cuit", name:"Riz cuit", kcal100:130, prot100:2.7, fat100:0.3, sugar100:0.1 },
+        { id:"huile", name:"Huile", kcal100:884, prot100:0, fat100:100, sugar100:0 }
+      ]
+    };
+    renderAll();
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    recipe = { ingredients: [] };
+    // re-synchronise poids manuel par défaut
+    manualAutoSync = true;
+    el("manualAutoSync").checked = true;
+    manualFinalWeight = 0;
+    renderAll();
+  });
+
+  // Poids final manuel slider
+  el("manualFinalWeightSlider").addEventListener("input", (e) => {
+    manualFinalWeight = Number(e.target.value) || 0;
+    // si l'utilisateur bouge le slider, on coupe l'auto-sync
+    if (manualAutoSync) {
+      manualAutoSync = false;
+      el("manualAutoSync").checked = false;
+    }
+    renderResultsAndWeights();
+  });
+
+  // Checkbox auto-sync
+  el("manualAutoSync").addEventListener("change", (e) => {
+    manualAutoSync = !!e.target.checked;
+    if (manualAutoSync) {
+      // recolle immédiatement au poids ingrédients
+      manualFinalWeight = round0(ingredientTotals().weight);
+      el("manualFinalWeightSlider").value = manualFinalWeight;
+    }
+    renderResultsAndWeights();
+  });
+
+  function renderAll(){
+    renderProductSelect();
+    renderIngredients();
+
+    // défaut: poids manuel = poids ingrédients si auto-sync
+    const t = ingredientTotals();
+    if (manualAutoSync) manualFinalWeight = round0(t.weight);
+
+    renderManualWeightUI();
+    renderResultsAndWeights();
+    syncCatalogEditor();
+  }
+
+  // init
+  renderAll();
+</script>
+</body>
+</html>
+
