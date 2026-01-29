@@ -1,4 +1,4 @@
- <!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
@@ -166,6 +166,31 @@
             </div>
           </div>
 
+          <!-- NOUVEAU: macros /100g pour les 2 bases -->
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-md-6">
+              <div class="p-3 bg-white border rounded-3">
+                <div class="text-muted">Macros / 100g (ingrédients)</div>
+                <div class="mono">
+                  <div>P: <span id="protPer100Ingredients">0</span> g</div>
+                  <div>L: <span id="fatPer100Ingredients">0</span> g</div>
+                  <div>Sucres: <span id="sugarPer100Ingredients">0</span> g</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="p-3 bg-white border rounded-3">
+                <div class="text-muted">Macros / 100g (poids final manuel)</div>
+                <div class="mono">
+                  <div>P: <span id="protPer100Manual">0</span> g</div>
+                  <div>L: <span id="fatPer100Manual">0</span> g</div>
+                  <div>Sucres: <span id="sugarPer100Manual">0</span> g</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="p-3 bg-white border rounded-3">
             <div class="d-flex justify-content-between">
               <span class="text-muted">Poids (somme ingrédients)</span>
@@ -257,7 +282,22 @@
     const mw = Number(manualFinalWeight) || 0;
     const kcalPer100Manual = mw>0 ? (kcal/mw)*100 : 0;
 
-    return { weight, kcal, kcalPer100Ingredients, kcalPer100Manual, prot, fat, sugar };
+    // NOUVEAU: macros / 100g (ingrédients)
+    const protPer100Ingredients  = weight>0 ? (prot/weight)*100 : 0;
+    const fatPer100Ingredients   = weight>0 ? (fat/weight)*100 : 0;
+    const sugarPer100Ingredients = weight>0 ? (sugar/weight)*100 : 0;
+
+    // NOUVEAU: macros / 100g (manuel)
+    const protPer100Manual  = mw>0 ? (prot/mw)*100 : 0;
+    const fatPer100Manual   = mw>0 ? (fat/mw)*100 : 0;
+    const sugarPer100Manual = mw>0 ? (sugar/mw)*100 : 0;
+
+    return {
+      weight, kcal, prot, fat, sugar,
+      kcalPer100Ingredients, kcalPer100Manual,
+      protPer100Ingredients, fatPer100Ingredients, sugarPer100Ingredients,
+      protPer100Manual, fatPer100Manual, sugarPer100Manual
+    };
   }
 
   function syncCatalogEditor(){
@@ -354,6 +394,15 @@
     el("kcalPer100Ingredients").textContent = round0(t.kcalPer100Ingredients);
     el("kcalPer100Manual").textContent = round0(t.kcalPer100Manual);
 
+    // NOUVEAU: affichage macros / 100g
+    el("protPer100Ingredients").textContent = round1(t.protPer100Ingredients);
+    el("fatPer100Ingredients").textContent = round1(t.fatPer100Ingredients);
+    el("sugarPer100Ingredients").textContent = round1(t.sugarPer100Ingredients);
+
+    el("protPer100Manual").textContent = round1(t.protPer100Manual);
+    el("fatPer100Manual").textContent = round1(t.fatPer100Manual);
+    el("sugarPer100Manual").textContent = round1(t.sugarPer100Manual);
+
     el("ingredientsWeight").textContent = `${round0(t.weight)} g`;
     el("manualWeightOut").textContent = `${round0(manualFinalWeight)} g`;
 
@@ -438,50 +487,49 @@
     downloadJson("macros.json", catalog);
   });
 
-el("jsonFileInput").addEventListener("change", async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  el("jsonFileInput").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  try {
-    const text = await file.text();
-    const parsed = JSON.parse(text);
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
 
-    // Accepte 2 formats:
-    // 1) { products: [...] }
-    // 2) [ ... ]   (liste directe)
-    let products = null;
-    if (Array.isArray(parsed)) products = parsed;
-    else if (parsed && Array.isArray(parsed.products)) products = parsed.products;
+      // Accepte 2 formats:
+      // 1) { products: [...] }
+      // 2) [ ... ]   (liste directe)
+      let products = null;
+      if (Array.isArray(parsed)) products = parsed;
+      else if (parsed && Array.isArray(parsed.products)) products = parsed.products;
 
-    if (!products) throw new Error("Format attendu: { products: [...] } ou bien un tableau [...]");
+      if (!products) throw new Error("Format attendu: { products: [...] } ou bien un tableau [...]");
 
-    // Validation minimale
-    for (const p of products) {
-      for (const k of ["id","name","kcal100","prot100","fat100","sugar100"]) {
-        if (!(k in p)) throw new Error(`Champ manquant dans un produit: ${k}`);
+      // Validation minimale
+      for (const p of products) {
+        for (const k of ["id","name","kcal100","prot100","fat100","sugar100"]) {
+          if (!(k in p)) throw new Error(`Champ manquant dans un produit: ${k}`);
+        }
       }
+
+      // Applique le catalogue
+      catalog = { products };
+
+      // IMPORTANT: met à jour l'UI dans le bon ordre
+      syncCatalogEditor();
+      renderProductSelect();
+
+      // Sélectionne le 1er produit pour vérifier visuellement
+      const sel = el("productSelect");
+      if (sel.options.length > 0) sel.selectedIndex = 0;
+
+      alert(`Catalogue importé: ${products.length} produits`);
+    } catch (err) {
+      alert("Import JSON invalide: " + err.message);
+    } finally {
+      // Permet de ré-importer le même fichier (sinon change ne se déclenche pas toujours)
+      e.target.value = "";
     }
-
-    // Applique le catalogue
-    catalog = { products };
-
-    // IMPORTANT: met à jour l'UI dans le bon ordre
-    syncCatalogEditor();
-    renderProductSelect();
-
-    // Sélectionne le 1er produit pour vérifier visuellement
-    const sel = el("productSelect");
-    if (sel.options.length > 0) sel.selectedIndex = 0;
-
-    alert(`Catalogue importé: ${products.length} produits`);
-  } catch (err) {
-    alert("Import JSON invalide: " + err.message);
-  } finally {
-    // Permet de ré-importer le même fichier (sinon change ne se déclenche pas toujours)
-    e.target.value = "";
-  }
-});
-
+  });
 
   el("loadSampleBtn").addEventListener("click", () => {
     catalog = {
@@ -543,4 +591,3 @@ el("jsonFileInput").addEventListener("change", async (e) => {
 </script>
 </body>
 </html>
-
