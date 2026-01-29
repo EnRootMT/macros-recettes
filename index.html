@@ -586,8 +586,42 @@
     syncCatalogEditor();
   }
 
+
+  async function loadCatalogFromGithubIfExists() {
+  try {
+    const res = await fetch("macros.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("macros.json absent");
+
+    const parsed = await res.json();
+
+    let products = null;
+    if (Array.isArray(parsed)) products = parsed;
+    else if (parsed && Array.isArray(parsed.products)) products = parsed.products;
+
+    if (!products) throw new Error("Format JSON invalide");
+
+    // validation minimale
+    for (const p of products) {
+      for (const k of ["id","name","kcal100","prot100","fat100","sugar100"]) {
+        if (!(k in p)) throw new Error(`Champ manquant: ${k}`);
+      }
+    }
+
+    catalog = { products };
+
+    renderAll();
+    console.log(`✔ macros.json chargé depuis GitHub (${products.length} produits)`);
+
+  } catch (err) {
+    console.log("ℹ macros.json non chargé automatiquement :", err.message);
+    // fallback silencieux → mode import manuel
+  }
+}
+
+
   // init
   renderAll();
+  loadCatalogFromGithubIfExists();
 </script>
 </body>
 </html>
