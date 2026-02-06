@@ -3,7 +3,6 @@ const el = (id) => document.getElementById(id);
 let catalog = { products: [] };
 let catalogIndex = new Map();
 let lastIngredients = [];
-let recipesFromIndex = [];
 
 function normalizeName(str) {
   return str
@@ -126,19 +125,6 @@ attachCatalogFileInput("catalogFileInput", (loaded) => {
   if (lastIngredients.length > 0) renderIngredientsList(lastIngredients);
 });
 
-function renderRecipesList() {
-  const list = el("recipesList");
-  list.innerHTML = "";
-
-  for (const name of recipesFromIndex) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "list-group-item list-group-item-action";
-    btn.textContent = name;
-    btn.addEventListener("click", () => loadCookFromUrl(`recipes/${name}`));
-    list.appendChild(btn);
-  }
-}
 
 async function loadCookFile(file) {
   const text = await file.text();
@@ -155,7 +141,7 @@ async function loadCookFromUrl(url) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     alert("Impossible de charger: " + url);
-    return;
+    return false;
   }
   const text = await res.text();
   el("cookPreview").value = text;
@@ -165,39 +151,38 @@ async function loadCookFromUrl(url) {
   lastIngredients = ingredients;
   renderIngredientsList(ingredients);
   renderIngredientsDebug(ingredients);
+  return true;
+}
+
+function getRecipeFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const recipe = params.get("recipe");
+  return recipe && recipe.trim().length > 0 ? recipe : null;
+}
+
+function handleRecipeMessage(event) {
+  const data = event.data || {};
+  if (data.type !== "cook-recipe" || !data.recipe) return;
+  el("recipeRequested").textContent = data.recipe;
+  loadCookFromUrl(data.recipe).then((ok) => {
+    if (!ok) {
+      el("recipeRequested").textContent = `${data.recipe} (import manuel requis en mode fichier)`;
+    }
+  });
 }
 
 // init
 initCatalog();
-fetch("recipes/index.json", { cache: "no-store" })
-  .then((r) => r.ok ? r.json() : null)
-  .then((list) => {
-    if (!Array.isArray(list) || list.length === 0) {
-      el("recipesStatus").textContent = "Aucune recette trouvée dans recipes/index.json (importe-le manuellement).";
-      return;
+
+const recipeFromQuery = getRecipeFromQuery();
+if (recipeFromQuery) {
+  el("recipeRequested").textContent = recipeFromQuery;
+  const normalized = recipeFromQuery.includes("/") ? recipeFromQuery : `recipes/${recipeFromQuery}`;
+  loadCookFromUrl(normalized).then((ok) => {
+    if (!ok) {
+      el("recipeRequested").textContent = `${recipeFromQuery} (import manuel requis en mode fichier)`;
     }
-    recipesFromIndex = list.filter((n) => typeof n === "string");
-    renderRecipesList();
-    el("recipesStatus").textContent = `Recettes: ${recipesFromIndex.length}`;
-  })
-  .catch(() => {
-    el("recipesStatus").textContent = "Impossible de charger recipes/index.json (importe-le manuellement).";
   });
+}
 
-el("recipesIndexInput").addEventListener("change", async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  try {
-    const text = await file.text();
-    const list = JSON.parse(text);
-    if (!Array.isArray(list)) throw new Error("Format attendu: tableau JSON");
-    recipesFromIndex = list.filter((n) => typeof n === "string");
-    renderRecipesList();
-    el("recipesStatus").textContent = `Recettes: ${recipesFromIndex.length}`;
-  } catch (err) {
-    alert("Import index.json invalide: " + err.message);
-  } finally {
-    e.target.value = "";
-  }
-});
+window.addEventListener("message", handleRecipeMessage);

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="google" content="notranslate" />
+  <title>Recettes</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background:#f8f9fa; }
+    .card { border-radius: 1rem; }
+    .frame {
+      width: 100%;
+      height: calc(100vh - 140px);
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      background: #fff;
+    }
+  </style>
+</head>
+
+<body translate="no">
+<div class="container-fluid py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h5 mb-0">Recettes</h1>
+    <div class="text-muted small">Menu + aperçu cook.html</div>
+  </div>
+
+  <div class="row g-3" id="mainRow">
+    <div class="col-12 col-lg-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h6">Menu</h2>
+          <div class="text-muted small mb-2">Données: `recipes/index.json`</div>
+          <div class="mb-3">
+            <label class="form-label">Importer recipes/index.json</label>
+            <input id="recipesIndexInput" class="form-control" type="file" accept="application/json">
+            <div class="form-text">En mode fichier, sélectionne le `index.json` généré.</div>
+          </div>
+          <div id="recipesStatus" class="text-muted small mb-2"></div>
+          <div id="recipesList" class="list-group"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-9" id="cookContainer">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h6">Recette</h2>
+          <iframe id="cookFrame" class="frame" src="cook.html"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const listEl = document.getElementById("recipesList");
+  const statusEl = document.getElementById("recipesStatus");
+  const cookFrame = document.getElementById("cookFrame");
+
+  function setStatus(text) {
+    statusEl.textContent = text;
+  }
+
+  function renderList(items) {
+    listEl.innerHTML = "";
+    for (const name of items) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "list-group-item list-group-item-action";
+      btn.textContent = name;
+      btn.addEventListener("click", () => {
+        setActive(btn);
+        sendRecipeToFrame(name);
+      });
+      listEl.appendChild(btn);
+    }
+    if (items.length > 0) {
+      const first = listEl.querySelector("button");
+      if (first) {
+        setActive(first);
+        sendRecipeToFrame(items[0]);
+      }
+    }
+  }
+
+  function setActive(btn) {
+    listEl.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+
+  function sendRecipeToFrame(name) {
+    const payload = { type: "cook-recipe", recipe: `recipes/${name}` };
+    if (cookFrame.contentWindow) {
+      cookFrame.contentWindow.postMessage(payload, "*");
+    }
+  }
+
+  cookFrame.addEventListener("load", () => {
+    const active = listEl.querySelector("button.active");
+    if (active) sendRecipeToFrame(active.textContent);
+  });
+
+  fetch("recipes/index.json", { cache: "no-store" })
+    .then((r) => r.ok ? r.json() : null)
+    .then((list) => {
+      if (!Array.isArray(list) || list.length === 0) {
+        setStatus("Aucune recette trouvée (importe index.json manuellement).");
+        return;
+      }
+      renderList(list.filter((n) => typeof n === "string"));
+      setStatus(`Recettes: ${list.length}`);
+    })
+    .catch(() => {
+      setStatus("Impossible de charger recipes/index.json (importe-le manuellement).");
+    });
+
+  document.getElementById("recipesIndexInput").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const list = JSON.parse(text);
+      if (!Array.isArray(list)) throw new Error("Format attendu: tableau JSON");
+      const cleaned = list.filter((n) => typeof n === "string");
+      renderList(cleaned);
+      setStatus(`Recettes: ${cleaned.length}`);
+    } catch (err) {
+      alert("Import index.json invalide: " + err.message);
+    } finally {
+      e.target.value = "";
+    }
+  });
+</script>
+</body>
+</html>

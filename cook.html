@@ -22,25 +22,10 @@
     <h1 class="h4 mb-0">Import Cooklang</h1>
     <div class="text-muted small">Chargement auto de macros.json</div>
   </div>
+  <div class="text-muted small mb-3">Recette demandée: <span id="recipeRequested">—</span></div>
 
   <div class="row g-3">
-    <div class="col-12 col-lg-3">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h2 class="h6">Recettes (.cook)</h2>
-          <div class="text-muted small mb-2">Liste chargée depuis `recipes/index.json`.</div>
-          <div class="mb-3">
-            <label class="form-label">Importer recipes/index.json</label>
-            <input id="recipesIndexInput" class="form-control" type="file" accept="application/json">
-            <div class="form-text">En mode fichier, sélectionne le `index.json` généré.</div>
-          </div>
-          <div id="recipesList" class="list-group"></div>
-          <div id="recipesStatus" class="text-muted small mt-2"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-5">
+    <div class="col-12 col-lg-6">
       <div class="card shadow-sm">
         <div class="card-body">
           <h2 class="h5">Uploader un fichier .cook</h2>
@@ -62,7 +47,7 @@
       </div>
     </div>
 
-    <div class="col-12 col-lg-4">
+    <div class="col-12 col-lg-6">
       <div class="card shadow-sm">
         <div class="card-body">
           <h2 class="h5">Ingrédients détectés</h2>
